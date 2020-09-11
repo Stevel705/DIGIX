@@ -1,0 +1,8 @@
+#datasets 
+train*/
+test*/
+
+# Trash
+__pycache__
+.vscode
+wandb
