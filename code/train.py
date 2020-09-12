@@ -38,11 +38,11 @@ parser.add_argument('--embedding-size', default = 512, type = int,
     dest = 'sz_embedding',
     help = 'Size of embedding that is appended to backbone model.'
 )
-parser.add_argument('--batch-size', default = 20, type = int,
+parser.add_argument('--batch-size', default = 100, type = int,
     dest = 'sz_batch',
     help = 'Number of samples per batch.'
 )
-parser.add_argument('--epochs', default = 60, type = int,
+parser.add_argument('--epochs', default = 40, type = int,
     dest = 'nb_epochs',
     help = 'Number of training epochs.'
 )
@@ -53,7 +53,7 @@ parser.add_argument('--workers', default = 4, type = int,
     dest = 'nb_workers',
     help = 'Number of workers for dataloader.'
 )
-parser.add_argument('--model', default = 'resnet18',
+parser.add_argument('--model', default = 'resnet50',
     help = 'Model for training'
 )
 parser.add_argument('--loss', default = 'Proxy_Anchor',
@@ -145,32 +145,33 @@ trn_dataset = Huawei_Dataset(
 #                 is_inception = (args.model == 'bn_inception')
 #             ))
 
-dl_tr = torch.utils.data.DataLoader(
-            trn_dataset,
-            batch_size=args.sz_batch,
-            shuffle=True,
-            num_workers=args.nb_workers)
-# if args.IPC:
-#     balanced_sampler = sampler.BalancedSampler(trn_dataset, batch_size=args.sz_batch, images_per_class = args.IPC)
-#     batch_sampler = BatchSampler(balanced_sampler, batch_size = args.sz_batch, drop_last = True)
-#     dl_tr = torch.utils.data.DataLoader(
-#         trn_dataset,
-#         num_workers = args.nb_workers,
-#         pin_memory = True,
-#         batch_sampler = batch_sampler
-#     )
-#     print('Balanced Sampling')
+# dl_tr = torch.utils.data.DataLoader(
+#             trn_dataset,
+#             batch_size=args.sz_batch,
+#             shuffle=True,
+#             num_workers=args.nb_workers)
+
+if args.IPC:
+    balanced_sampler = sampler.BalancedSampler(trn_dataset, batch_size=args.sz_batch, images_per_class = args.IPC)
+    batch_sampler = BatchSampler(balanced_sampler, batch_size = args.sz_batch, drop_last = True)
+    dl_tr = torch.utils.data.DataLoader(
+        trn_dataset,
+        num_workers = args.nb_workers,
+        pin_memory = True,
+        batch_sampler = batch_sampler
+    )
+    print('Balanced Sampling')
     
-# else:
-#     dl_tr = torch.utils.data.DataLoader(
-#         trn_dataset,
-#         batch_size = args.sz_batch,
-#         shuffle = True,
-#         num_workers = args.nb_workers,
-#         drop_last = True,
-#         pin_memory = True
-#     )
-#     print('Random Sampling')
+else:
+    dl_tr = torch.utils.data.DataLoader(
+        trn_dataset,
+        batch_size = args.sz_batch,
+        shuffle = True,
+        num_workers = args.nb_workers,
+        drop_last = True,
+        pin_memory = True
+    )
+    print('Random Sampling')
 
 # if args.dataset != 'Inshop':
 #     ev_dataset = dataset.load(
@@ -233,8 +234,8 @@ nb_classes = trn_dataset.nb_classes()
 #     model = bn_inception(embedding_size=args.sz_embedding, pretrained=True, is_norm=args.l2_norm, bn_freeze = args.bn_freeze)
 if args.model.find('resnet18')+1:
     model = Resnet18(embedding_size=args.sz_embedding, pretrained=True, is_norm=args.l2_norm, bn_freeze = args.bn_freeze)
-# elif args.model.find('resnet50')+1:
-#     model = Resnet50(embedding_size=args.sz_embedding, pretrained=True, is_norm=args.l2_norm, bn_freeze = args.bn_freeze)
+elif args.model.find('resnet50')+1:
+    model = Resnet50(embedding_size=args.sz_embedding, pretrained=True, is_norm=args.l2_norm, bn_freeze = args.bn_freeze)
 # elif args.model.find('resnet101')+1:
 #     model = Resnet101(embedding_size=args.sz_embedding, pretrained=True, is_norm=args.l2_norm, bn_freeze = args.bn_freeze)
 model = model.cuda()
@@ -333,7 +334,8 @@ for epoch in range(0, args.nb_epochs):
     losses_list.append(np.mean(losses_per_epoch))
     wandb.log({'loss': losses_list[-1]}, step=epoch)
     scheduler.step()
-    
+
+torch.save({'model_state_dict':model.state_dict()}, '{}/{}_{}_best.pth'.format(LOG_DIR, args.dataset, args.model))
     # if(epoch >= 0):
     #     with torch.no_grad():
     #         print("**Evaluating...**")
