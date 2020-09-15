@@ -11,6 +11,8 @@ from torchvision.models import resnet50
 from torchvision.models import resnet101
 import torch.utils.model_zoo as model_zoo
 
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 class Resnet18(nn.Module):
     def __init__(self,embedding_size, pretrained=True, is_norm=True, bn_freeze = True):

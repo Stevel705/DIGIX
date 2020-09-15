@@ -42,7 +42,7 @@ parser.add_argument('--batch-size', default = 100, type = int,
     dest = 'sz_batch',
     help = 'Number of samples per batch.'
 )
-parser.add_argument('--epochs', default = 40, type = int,
+parser.add_argument('--epochs', default = 100, type = int,
     dest = 'nb_epochs',
     help = 'Number of training epochs.'
 )
@@ -62,10 +62,10 @@ parser.add_argument('--loss', default = 'Proxy_Anchor',
 parser.add_argument('--optimizer', default = 'adamw',
     help = 'Optimizer setting'
 )
-parser.add_argument('--lr', default = 1e-4, type =float,
+parser.add_argument('--lr', default = 1e-3, type =float,
     help = 'Learning rate setting'
 )
-parser.add_argument('--weight-decay', default = 1e-4, type =float,
+parser.add_argument('--weight-decay', default = 1e-3, type =float,
     help = 'Weight decay setting'
 )
 parser.add_argument('--lr-decay-step', default = 10, type =int,
@@ -335,7 +335,7 @@ for epoch in range(0, args.nb_epochs):
     wandb.log({'loss': losses_list[-1]}, step=epoch)
     scheduler.step()
 
-torch.save({'model_state_dict':model.state_dict()}, '{}/{}_{}_best.pth'.format(LOG_DIR, args.dataset, args.model))
+torch.save({'model_state_dict':model.state_dict()}, '{}/{}_{}_{}_best.pth'.format(LOG_DIR, args.dataset, args.model, epoch))
     # if(epoch >= 0):
     #     with torch.no_grad():
     #         print("**Evaluating...**")

@@ -9,4 +9,6 @@ wandb
 
 
 MNIST
-
+*.pth
+*.h5
+*.zip
